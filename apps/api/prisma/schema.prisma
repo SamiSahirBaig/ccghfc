@@ -1,0 +1,364 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  CITIZEN
+  OFFICER
+  SUPERVISOR
+  ADMIN
+  DEVICE
+}
+
+enum ComplaintSource {
+  CITIZEN
+  SENSOR
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  AI_PENDING
+  NEEDS_REVIEW
+  VERIFIED
+  REJECTED_SPAM
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REOPENED
+  SLA_BREACHED
+  CLOSED
+}
+
+enum PriorityLabel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MediaType {
+  BEFORE
+  AFTER
+  SENSOR_CHART
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  WARNING
+  CRITICAL
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  role         UserRole  @default(CITIZEN)
+  wardId       String?
+  trustScore   Float     @default(1.0)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  ward               Ward?           @relation(fields: [wardId], references: [id])
+  reportedComplaints Complaint[]     @relation("ReporterComplaints")
+  assignedComplaints Complaint[]     @relation("AssignedComplaints")
+  statusHistory      StatusHistory[]
+  comments           Comment[]
+  upvotes            Upvote[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model Zone {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  wards Ward[]
+
+  @@map("zones")
+}
+
+model Ward {
+  id              String   @id @default(uuid())
+  name            String
+  zoneId          String
+  boundaryGeoJson String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  zone       Zone        @relation(fields: [zoneId], references: [id])
+  users      User[]
+  complaints Complaint[]
+  devices    Device[]
+
+  @@map("wards")
+}
+
+model Department {
+  id           String   @id @default(uuid())
+  name         String
+  code         String   @unique
+  contactEmail String?
+  createdAt    DateTime @default(now())
+
+  categories Category[]
+
+  @@map("departments")
+}
+
+model Category {
+  id              String   @id @default(uuid())
+  name            String
+  departmentId    String
+  defaultSlaHours Int      @default(72)
+  icon            String   @default("alert-circle")
+  createdAt       DateTime @default(now())
+
+  department Department  @relation(fields: [departmentId], references: [id])
+  complaints Complaint[]
+
+  @@map("categories")
+}
+
+model Complaint {
+  id                 String          @id @default(uuid())
+  publicCode         String          @unique
+  reporterId         String?
+  source             ComplaintSource @default(CITIZEN)
+  categoryId         String
+  title              String
+  description        String          @db.Text
+  latitude           Float
+  longitude          Float
+  address            String
+  landmark           String?
+  wardId             String
+  status             ComplaintStatus @default(SUBMITTED)
+  priorityScore      Float           @default(0.0)
+  priorityLabel      PriorityLabel   @default(LOW)
+  aiSeverity         Int             @default(1)
+  slaDeadline        DateTime
+  escalationLevel    Int             @default(0)
+  assignedOfficerId  String?
+  parentComplaintId  String?
+  upvoteCount        Int             @default(0)
+  resolvedAt         DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  reporter        User?            @relation("ReporterComplaints", fields: [reporterId], references: [id])
+  assignedOfficer User?            @relation("AssignedComplaints", fields: [assignedOfficerId], references: [id])
+  category        Category         @relation(fields: [categoryId], references: [id])
+  ward            Ward             @relation(fields: [wardId], references: [id])
+  parentComplaint Complaint?       @relation("ComplaintClustering", fields: [parentComplaintId], references: [id])
+  subComplaints   Complaint[]      @relation("ComplaintClustering")
+  media           ComplaintMedia[]
+  aiVerifications AiVerification[]
+  statusHistory   StatusHistory[]
+  comments        Comment[]
+  upvotes         Upvote[]
+  escalationLogs  EscalationLog[]
+  sensorAlerts    SensorAlert[]
+
+  @@index([wardId, status])
+  @@index([priorityScore(sort: Desc)])
+  @@index([latitude, longitude])
+  @@map("complaints")
+}
+
+model ComplaintMedia {
+  id          String    @id @default(uuid())
+  complaintId String
+  url         String
+  type        MediaType @default(BEFORE)
+  phash       String?
+  exif        String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@map("complaint_media")
+}
+
+model AiVerification {
+  id                  String   @id @default(uuid())
+  complaintId         String
+  rawResponse         String   @db.Text
+  authenticityScore   Float    @default(1.0)
+  flags               String   @db.Text
+  decision            String   @default("VERIFIED")
+  detectedIssueType   String?
+  matchesUserCategory Boolean  @default(true)
+  confidence          Float    @default(1.0)
+  model               String   @default("mock-vision")
+  reasoning           String?  @db.Text
+  createdAt           DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@map("ai_verifications")
+}
+
+model StatusHistory {
+  id          String   @id @default(uuid())
+  complaintId String
+  fromStatus  String
+  toStatus    String
+  actorId     String?
+  note        String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@map("status_history")
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  complaintId String
+  userId      String
+  content     String   @db.Text
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+model Upvote {
+  id          String   @id @default(uuid())
+  complaintId String
+  userId      String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([complaintId, userId])
+  @@map("upvotes")
+}
+
+model EscalationLog {
+  id                String   @id @default(uuid())
+  complaintId       String
+  level             Int
+  recipient         String
+  subject           String
+  status            String
+  providerMessageId String?
+  error             String?  @db.Text
+  sentAt            DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@map("escalation_logs")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  payload   String    @db.Text
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Device {
+  id                  String       @id @default(uuid())
+  deviceCode          String       @unique
+  name                String
+  apiKeyHash          String
+  latitude            Float
+  longitude           Float
+  wardId              String
+  status              DeviceStatus @default(ONLINE)
+  firmwareVersion     String       @default("1.0.0")
+  calibration         String       @db.Text
+  sampleIntervalSec   Int          @default(30)
+  warnThresholdPpm    Float        @default(250.0)
+  criticalThresholdPpm Float       @default(400.0)
+  lastSeen            DateTime?
+  createdAt           DateTime     @default(now())
+
+  ward     Ward            @relation(fields: [wardId], references: [id])
+  readings SensorReading[]
+  alerts   SensorAlert[]
+
+  @@map("devices")
+}
+
+model SensorReading {
+  id           String   @id @default(uuid())
+  deviceId     String
+  recordedAt   DateTime @default(now())
+  rawValue     Float
+  ppm          Float
+  temperatureC Float?
+  humidity     Float?
+  batteryV     Float?
+  createdAt    DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, recordedAt])
+  @@map("sensor_readings")
+}
+
+model SensorAlert {
+  id               String   @id @default(uuid())
+  deviceId         String
+  severity         String
+  ppm              Float
+  message          String   @db.Text
+  complaintCreated Boolean  @default(false)
+  complaintId      String?
+  createdAt        DateTime @default(now())
+
+  device    Device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  complaint Complaint? @relation(fields: [complaintId], references: [id])
+
+  @@map("sensor_alerts")
+}
+
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  diff      String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}

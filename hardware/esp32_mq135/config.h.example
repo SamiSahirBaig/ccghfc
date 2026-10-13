@@ -1,0 +1,21 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// Wi-Fi Credentials
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+
+// CityClean API Configuration
+#define API_BASE_URL "http://192.168.1.100:5000/api/v1"
+#define DEVICE_ID "NODE-001"
+#define DEVICE_API_KEY "cc_key_node001"
+
+// Hardware Pinout
+#define MQ135_ANALOG_PIN 34 // ADC1 channel (GPIO 34) recommended on ESP32
+
+// Sensor Constants
+#define SAMPLE_INTERVAL_MS 30000 // 30 seconds default
+#define WARMUP_TIME_MS 120000    // 2-minute sensor heater warm-up
+#define SAMPLES_COUNT 20         // 20-sample median filtering
+
+#endif // CONFIG_H

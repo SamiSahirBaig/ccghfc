@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "CityClean",
+    "tagline": "AI-Verified Civic Grievance Redressal & Environmental Monitoring",
+    "reportCta": "Report Civic Issue in 30s",
+    "viewPublicMap": "Explore Public Transparency Map"
+  },
+  "nav": {
+    "home": "Home",
+    "report": "Report Issue",
+    "myComplaints": "My Issues",
+    "officer": "Officer Queue",
+    "supervisor": "Supervisor",
+    "admin": "Admin",
+    "transparency": "Public Data",
+    "login": "Sign In",
+    "register": "Register",
+    "logout": "Sign Out"
+  },
+  "hero": {
+    "headline": "Clean Streets. Accountable Governance. Guaranteed 72h SLA.",
+    "subheadline": "Snap a photo of garbage piles, overflowing drains, or toxic smog. Our AI validates the issue and automatically routes it with an enforced 3-day resolution timer.",
+    "statResolved": "Resolved This Week",
+    "statAvgTime": "Avg Resolution Time",
+    "statSlaRate": "SLA Compliance Rate"
+  },
+  "report": {
+    "step1": "1. Photo Evidence",
+    "step2": "2. Defect Details",
+    "step3": "3. Exact Location",
+    "cameraBtn": "Snap Photo / Upload",
+    "cameraHint": "Capture clear photos of the civic issue. Camera automatically tags GPS coordinates.",
+    "titleLabel": "Issue Title",
+    "titlePlaceholder": "e.g. Uncollected garbage pile blocking pedestrian path",
+    "categoryLabel": "Civic Category",
+    "descLabel": "Description",
+    "descPlaceholder": "Describe volume, odor, and hazard severity...",
+    "landmarkLabel": "Landmark / Pillar No.",
+    "landmarkPlaceholder": "e.g. Opposite Metro Gate 2",
+    "addressLabel": "Detected Address",
+    "autoGps": "Auto-Detect My GPS Location",
+    "submitBtn": "Submit Grievance Now",
+    "submitting": "Uploading & AI Analyzing...",
+    "successTitle": "Complaint Registered Successfully!",
+    "slaNotice": "Statutory 72-Hour Resolution SLA Started"
+  },
+  "priority": {
+    "critical": "CRITICAL URGENCY",
+    "high": "HIGH PRIORITY",
+    "medium": "MEDIUM",
+    "low": "LOW"
+  },
+  "status": {
+    "SUBMITTED": "Submitted",
+    "AI_PENDING": "AI Verification Pending",
+    "NEEDS_REVIEW": "Under Human Review",
+    "VERIFIED": "AI Verified",
+    "ASSIGNED": "Assigned to Ward Officer",
+    "IN_PROGRESS": "Cleaning in Progress",
+    "RESOLVED": "Resolved by Authority",
+    "REOPENED": "Reopened by Citizen",
+    "SLA_BREACHED": "SLA Breached - Escalated to DM",
+    "CLOSED": "Closed & Satisfied"
+  }
+}
