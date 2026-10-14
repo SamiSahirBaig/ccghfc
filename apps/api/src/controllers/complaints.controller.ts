@@ -239,10 +239,10 @@ export class ComplaintsController {
   }
 
   public static async list(req: Request, res: Response) {
-    const { status, categoryId, wardId, priority, source, mine, search, page = '1', limit = '20' } = req.query;
+    const { status, categoryId, wardId, priority, source, mine, search, sort = 'newest', page = '1', limit = '100' } = req.query;
 
     const pageNum = parseInt(page as string, 10) || 1;
-    const limitNum = parseInt(limit as string, 10) || 20;
+    const limitNum = parseInt(limit as string, 10) || 100;
     const skip = (pageNum - 1) * limitNum;
 
     const where: any = {};
@@ -263,13 +263,18 @@ export class ComplaintsController {
       ];
     }
 
+    const orderBy =
+      sort === 'priority'
+        ? [{ priorityScore: 'desc' }, { createdAt: 'desc' }]
+        : [{ createdAt: 'desc' }];
+
     const [total, items] = await Promise.all([
       prisma.complaint.count({ where }),
       prisma.complaint.findMany({
         where,
         skip,
         take: limitNum,
-        orderBy: [{ priorityScore: 'desc' }, { createdAt: 'desc' }],
+        orderBy,
         include: {
           category: { select: { id: true, name: true, icon: true } },
           ward: { select: { id: true, name: true } },
@@ -296,8 +301,10 @@ export class ComplaintsController {
   public static async getById(req: Request, res: Response) {
     const { id } = req.params;
 
-    const complaint = await prisma.complaint.findUnique({
-      where: { id },
+    const complaint = await prisma.complaint.findFirst({
+      where: {
+        OR: [{ id }, { publicCode: id }],
+      },
       include: {
         category: true,
         ward: true,

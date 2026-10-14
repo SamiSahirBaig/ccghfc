@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { ApiClient } from '@/lib/api-client';
 import LeafletMap from '@/components/map/LeafletMap';
+import SmartSmokeMonitoring from '@/components/iot/SmartSmokeMonitoring';
 
 export default function AdminDevicesPage() {
   const [devices, setDevices] = useState<any[]>([]);
@@ -250,6 +251,11 @@ export default function AdminDevicesPage() {
             </div>
           </div>
         )}
+
+        {/* Live ThingSpeak Smoke Monitoring Section */}
+        <div className="pt-2">
+          <SmartSmokeMonitoring />
+        </div>
       </div>
 
       {/* REGISTER NODE MODAL WITH ONE-TIME API KEY */}

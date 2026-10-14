@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Smoke Monitoring - CityClean IoT</title>
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-hover: #047857;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ffe4e6;
+      color: #be123c;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      margin-bottom: 0.5rem;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background-color: #e11d48;
+      border-radius: 50%;
+      box-shadow: 0 0 0 rgba(225, 29, 72, 0.4);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6); }
+      70% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+    }
+
+    h2 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .controls-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .channel-picker {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    .channel-picker input {
+      font-family: monospace;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      width: 110px;
+      outline: none;
+    }
+
+    .channel-picker button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .channel-picker button:hover {
+      background: var(--primary-hover);
+    }
+
+    .info-banner {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .chart-frame-box {
+      width: 100%;
+      height: 260px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #0b0f19;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .chart-frame-box video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .chart-frame-box iframe {
+      width: 100%;
+      height: 260px;
+      border: none;
+      display: block;
+    }
+
+    .back-home {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .back-home:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <div>
+        <div class="badge">
+          <span class="pulse"></span>
+          IoT Live Stream
+        </div>
+        <h2>Smart Smoke Monitoring</h2>
+        <p class="subtitle">Live gas concentration &amp; smoke incident telemetry from municipal sensor nodes</p>
+      </div>
+
+      <div class="controls-wrapper">
+        <div class="mode-toggle">
+          <button id="modeVideoBtn" class="mode-btn active" onclick="setMode('video')">Video Simulation</button>
+          <button id="modeIframeBtn" class="mode-btn" onclick="setMode('iframe')">ThingSpeak iFrame</button>
+        </div>
+
+        <div class="channel-picker">
+          <label for="channelIdInput"><strong>Channel:</strong></label>
+          <input type="text" id="channelIdInput" value="3536292" placeholder="Channel ID" />
+          <button onclick="updateChannel()">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-banner" id="infoBanner">
+      <span>●</span>
+      <strong>Continuous Video Simulation Active:</strong> Looping graphical simulation representing real-time smoke sensor data from the MQ135 node.
+    </div>
+
+    <div class="charts-grid">
+      <!-- Window 1: Live Sensor Reading -->
+      <div class="chart-card">
+        <h3><span class="status-dot"></span>Live Sensor Reading</h3>
+        <div class="chart-frame-box" id="box1">
+          <video id="video1" src="/videos/smoke_live_reading.mp4" autoplay loop muted playsinline></video>
+          <iframe id="iframe1" style="display:none;" src="https://thingspeak.com/channels/3536292/charts/1?dynamic=true&results=10"></iframe>
+        </div>
+      </div>
+
+      <!-- Window 2: Smoke Alert History -->
+      <div class="chart-card">
+        <h3><span class="status-dot" style="background:#e11d48;"></span>Smoke Alert History</h3>
+        <div class="chart-frame-box" id="box2">
+          <video id="video2" src="/videos/smoke_alert_history.mp4" autoplay loop muted playsinline></video>
+          <iframe id="iframe2" style="display:none;" src="https://thingspeak.com/channels/3536292/charts/2?dynamic=true&results=10"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <a href="/" class="back-home">&larr; Return to CityClean Portal</a>
+  </div>
+
+  <script>
+    var currentMode = 'video';
+
+    function setMode(mode) {
+      currentMode = mode;
+      var video1 = document.getElementById('video1');
+      var video2 = document.getElementById('video2');
+      var iframe1 = document.getElementById('iframe1');
+      var iframe2 = document.getElementById('iframe2');
+      var btnVideo = document.getElementById('modeVideoBtn');
+      var btnIframe = document.getElementById('modeIframeBtn');
+      var banner = document.getElementById('infoBanner');
+
+      if (mode === 'video') {
+        video1.style.display = 'block';
+        video2.style.display = 'block';
+        iframe1.style.display = 'none';
+        iframe2.style.display = 'none';
+        btnVideo.classList.add('active');
+        btnIframe.classList.remove('active');
+        banner.innerHTML = '<span>●</span> <strong>Continuous Video Simulation Active:</strong> Looping graphical simulation representing real-time smoke sensor data from the MQ135 node.';
+        video1.play();
+        video2.play();
+      } else {
+        video1.style.display = 'none';
+        video2.style.display = 'none';
+        iframe1.style.display = 'block';
+        iframe2.style.display = 'block';
+        btnVideo.classList.remove('active');
+        btnIframe.classList.add('active');
+        banner.innerHTML = '<span>⚠️</span> <strong>ThingSpeak iFrame Active:</strong> If you see "You don\'t have permission to view that channel!", ensure your ThingSpeak channel is marked public in Channel Settings.';
+      }
+    }
+
+    function updateChannel() {
+      var channelId = document.getElementById('channelIdInput').value.trim() || '3536292';
+      document.getElementById('iframe1').src = 'https://thingspeak.com/channels/' + channelId + '/charts/1?dynamic=true&results=10';
+      document.getElementById('iframe2').src = 'https://thingspeak.com/channels/' + channelId + '/charts/2?dynamic=true&results=10';
+      try {
+        localStorage.setItem('cc_thingspeak_channel_id', channelId);
+      } catch(e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        var saved = localStorage.getItem('cc_thingspeak_channel_id');
+        if (saved) {
+          document.getElementById('channelIdInput').value = saved;
+          updateChannel();
+        }
+      } catch(e) {}
+    });
+  </script>
+</body>
+</html>

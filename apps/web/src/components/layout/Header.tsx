@@ -37,8 +37,11 @@ export default function Header() {
           <Link href="/report" className={`hover:text-emerald-600 transition-colors ${pathname === '/report' ? 'text-emerald-700 font-semibold' : ''}`}>
             Report Issue
           </Link>
+          <Link href="/smoke-monitoring" className={`hover:text-emerald-600 transition-colors ${pathname === '/smoke-monitoring' ? 'text-emerald-700 font-semibold' : ''}`}>
+            Smoke Monitoring
+          </Link>
           <Link href="/complaints" className={`hover:text-emerald-600 transition-colors ${pathname?.startsWith('/complaints') ? 'text-emerald-700 font-semibold' : ''}`}>
-            Feed & Timeline
+            Complaints & Problems
           </Link>
           <Link href="/transparency" className={`hover:text-emerald-600 transition-colors ${pathname === '/transparency' ? 'text-emerald-700 font-semibold' : ''}`}>
             Public Map & Stats

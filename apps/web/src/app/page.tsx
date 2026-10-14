@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import LeafletMap from '@/components/map/LeafletMap';
 import { ApiClient } from '@/lib/api-client';
+import SmartSmokeMonitoring from '@/components/iot/SmartSmokeMonitoring';
 
 export default function LandingPage() {
   const [stats, setStats] = useState({
@@ -208,6 +209,11 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Smart Smoke Monitoring (ThingSpeak Live Charts) */}
+      <section className="max-w-7xl mx-auto px-4">
+        <SmartSmokeMonitoring />
       </section>
 
       {/* Live Map Preview */}

@@ -25,6 +25,8 @@ export default function ComplaintsListPage() {
   const fetchComplaints = () => {
     setLoading(true);
     const params = new URLSearchParams();
+    params.append('limit', '100');
+    params.append('sort', 'newest');
     if (statusFilter) params.append('status', statusFilter);
     if (priorityFilter) params.append('priority', priorityFilter);
     if (search) params.append('search', search);

@@ -1,5 +1,9 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+
+const DB_FILE = path.resolve(process.cwd(), 'local-storage-db.json');
 
 // Pre-computed bcrypt hash of "password123"
 const DEMO_PASSWORD_HASH = bcrypt.hashSync('password123', 10);
@@ -25,6 +29,64 @@ export class InMemoryDB {
 
   constructor() {
     this.seedInitialData();
+    this.loadFromDisk();
+  }
+
+  private saveToDisk() {
+    try {
+      const data = {
+        users: this.users,
+        complaints: this.complaints,
+        complaintMedia: this.complaintMedia,
+        aiVerifications: this.aiVerifications,
+        statusHistories: this.statusHistories,
+        comments: this.comments,
+        upvotes: this.upvotes,
+        escalationLogs: this.escalationLogs,
+        settings: this.settings,
+        auditLogs: this.auditLogs,
+      };
+      fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  private loadFromDisk() {
+    try {
+      if (fs.existsSync(DB_FILE)) {
+        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.complaints)) {
+          const existingIds = new Set(this.complaints.map((c) => c.id));
+          for (const c of data.complaints) {
+            if (!existingIds.has(c.id)) {
+              this.complaints.push(c);
+              existingIds.add(c.id);
+            }
+          }
+        }
+        if (Array.isArray(data.users)) {
+          const existingEmails = new Set(this.users.map((u) => u.email));
+          for (const u of data.users) {
+            if (!existingEmails.has(u.email)) {
+              this.users.push(u);
+              existingEmails.add(u.email);
+            }
+          }
+        }
+        if (Array.isArray(data.complaintMedia)) {
+          const existingMedia = new Set(this.complaintMedia.map((m) => m.id));
+          for (const m of data.complaintMedia) {
+            if (!existingMedia.has(m.id)) {
+              this.complaintMedia.push(m);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   private seedInitialData() {
@@ -372,6 +434,7 @@ export class InMemoryDB {
           ...args.data,
         };
         items.push(newItem);
+        this.saveToDisk();
         return enrichItem(newItem, args?.include, this);
       },
 
@@ -390,6 +453,7 @@ export class InMemoryDB {
           items.push(newItem);
           created.push(newItem);
         }
+        this.saveToDisk();
         return { count: created.length };
       },
 
@@ -405,6 +469,7 @@ export class InMemoryDB {
           updatedAt: new Date(),
         };
         items[index] = updated;
+        this.saveToDisk();
         return enrichItem(updated, args?.include, this);
       },
 
@@ -418,6 +483,7 @@ export class InMemoryDB {
             updatedAt: new Date(),
           };
           items[index] = updated;
+          this.saveToDisk();
           return enrichItem(updated, args?.include, this);
         } else {
           const id = args.create.id || `${collectionName}-${Date.now()}`;
@@ -428,6 +494,7 @@ export class InMemoryDB {
             ...args.create,
           };
           items.push(created);
+          this.saveToDisk();
           return enrichItem(created, args?.include, this);
         }
       },
@@ -495,7 +562,9 @@ function sortItems(items: any[], orderBy: any): any[] {
         if (valA === valB) continue;
         if (valA === undefined) return 1;
         if (valB === undefined) return -1;
-        const comp = valA > valB ? 1 : -1;
+        let vA = valA instanceof Date ? valA.getTime() : (typeof valA === 'string' && valA.includes('T') && !isNaN(Date.parse(valA)) ? new Date(valA).getTime() : valA);
+        let vB = valB instanceof Date ? valB.getTime() : (typeof valB === 'string' && valB.includes('T') && !isNaN(Date.parse(valB)) ? new Date(valB).getTime() : valB);
+        const comp = vA > vB ? 1 : -1;
         return dir === 'desc' ? -comp : comp;
       }
     }
