@@ -9,3 +9,4 @@ __pycache__/
 venv/
 *.log
 config.h
+.vercel/

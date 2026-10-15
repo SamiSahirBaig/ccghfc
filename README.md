@@ -148,7 +148,25 @@ npm run dev:all
 
 ---
 
-## 6. Hardware & IoT Deployment
+## 6. Deploying to Vercel (Zero-Config)
+
+CityClean's Next.js web application is fully pre-configured for instant deployment on Vercel:
+
+### Method 1: Direct Root Import (Default & Recommended)
+1. In your [Vercel Dashboard](https://vercel.com/new), import your repository: `https://github.com/SamiSahirBaig/ccghfc.git`.
+2. Keep the **Root Directory** as default (`./`).
+3. Vercel automatically detects [`vercel.json`](./vercel.json) with Next.js preset, build command `npm run build --workspace=apps/web`, and output directory `apps/web/.next`.
+4. (Optional) In **Environment Variables**, add:
+   - `NEXT_PUBLIC_API_URL`: URL to your live CityClean API (e.g., `https://api.yourdomain.com/api/v1`).
+5. Click **Deploy**.
+
+### Method 2: Scoped Subfolder
+1. If you prefer scoping Vercel directly to the frontend, set **Root Directory** to `apps/web` during import.
+2. Click **Deploy**.
+
+---
+
+## 7. Hardware & IoT Deployment
 
 ### Path A: ESP32 Wi-Fi Node
 1. Navigate to **Admin Portal > Devices** ([http://localhost:3000/admin/devices](http://localhost:3000/admin/devices)).
@@ -174,7 +192,7 @@ npm run simulate
 
 ---
 
-## 7. Verification & Acceptance Testing
+## 8. Verification & Acceptance Testing
 
 1. **Complaint Lifecycle**:
    - Log in as `citizen@cityclean.gov`.
@@ -193,5 +211,5 @@ npm run simulate
 
 ---
 
-## 8. License & Governance
+## 9. License & Governance
 CityClean is distributed under the MIT License. Developed for municipal civic technology and open smart city infrastructure.
